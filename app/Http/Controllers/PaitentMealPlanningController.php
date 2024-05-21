@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\paitent_meal_planning;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
@@ -10,46 +11,51 @@ class PaitentMealPlanningController extends Controller
 {
     public function getMonthlyStats(Request $request)
     {
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
+        $startDate = Carbon::parse($request->input('start_date'));
+        $endDate = Carbon::parse($request->input('end_date'));
 
-        $results =  paitent_meal_planning::with('patient')->selectRaw("
-                DATE_FORMAT(planned_date, '%M %Y') as month,
-                COUNT(*) as total_plans,
-                COUNT(CASE WHEN is_active = 1 THEN 1 END) as active_plans,
-                AVG(total_calories) as avg_total_calories,
-                AVG(total_fats) as avg_total_fats,
-                AVG(total_carbs) as avg_total_carbs,
-                AVG(total_proteins) as avg_total_proteins,
-                GROUP_CONCAT (DATE_FORMAT(planned_date, '%d %M %Y')) as planned_days,
-            ")
-            ->whereBetween('planned_date', [$startDate, $endDate])
-            ->groupBy(DB::raw("DATE_FORMAT(planned_date, '%Y-%m')"))
-            ->get();
+        $monthlyPlans = paitent_meal_planning::whereBetween('planned_date', [$startDate, $endDate])
+            ->get()
+            ->groupBy(function ($date) {
+                return Carbon::parse($date->planned_date)->format('F Y'); // Group by month and year
+            });
 
-        $data = $results->map(function ($result) {
-            $plannedDays = explode(',', $result->planned_days);
-            $totalDays = cal_days_in_month(CAL_GREGORIAN, date('m', strtotime($result->month)), date('Y', strtotime($result->month)));
-            $plannedPercentage = (count($plannedDays) / $totalDays) * 100;
+        $data = $monthlyPlans->map(function ($plans, $month) {
+            $totalPlans = $plans->count();
+            $activePlans = $plans->where('is_active', 1)->count();
+            $totalDaysInMonth = Carbon::parse($plans->first()->planned_date)->daysInMonth;
 
-            $allDays = array_map(function ($day) use ($result) {
-                return date('d F Y', strtotime("$result->month-$day"));
-            }, range(1, $totalDays));
+            $avgTotalCalories = $plans->avg('total_calories');
+            $avgTotalFats = $plans->avg('total_fats');
+            $avgTotalCarbs = $plans->avg('total_carbs');
+            $avgTotalProteins = $plans->avg('total_proteins');
 
-            $skippedDays = array_diff($allDays, $plannedDays);
+            $plannedDays = $plans->pluck('planned_date')->map(function ($date) {
+                return Carbon::parse($date)->format('d F Y');
+            })->toArray();
+
+            $allDaysInMonth = collect(range(1, $totalDaysInMonth))->map(function ($day) use ($plans) {
+                return Carbon::parse($plans->first()->planned_date)->format('F Y') . ' ' . str_pad($day, 2, '0', STR_PAD_LEFT);
+            })->map(function ($day) {
+                return Carbon::parse($day)->format('d F Y');
+            });
+
+            $skippedDays = $allDaysInMonth->diff($plannedDays);
+
+            $plannedPercentage = ($activePlans / $totalDaysInMonth) * 100;
 
             return [
-                'month' => $result->month,
+                'month' => $month,
                 'planned_percentage' => round($plannedPercentage, 2) . ' %',
-                'avg_total_calories' => round($result->avg_total_calories, 2),
-                'avg_total_fats' => round($result->avg_total_fats, 2),
-                'avg_total_carbs' => round($result->avg_total_carbs, 2),
-                'avg_total_proteins' => round($result->avg_total_proteins, 2),
-                'days_planning_skipped' => $skippedDays,
+                'avg_total_calories' => round($avgTotalCalories, 2),
+                'avg_total_fats' => round($avgTotalFats, 2),
+                'avg_total_carbs' => round($avgTotalCarbs, 2),
+                'avg_total_proteins' => round($avgTotalProteins, 2),
+                'days_planning_skipped' => $skippedDays->values()->all(),
             ];
         });
 
-        return response()->json(['data' => $data]);
+        return response()->json(['data' => $data->values()->all()]);
     }
 
 }
