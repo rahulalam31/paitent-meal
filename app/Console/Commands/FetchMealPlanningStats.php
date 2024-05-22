@@ -2,8 +2,13 @@
 
 namespace App\Console\Commands;
 
+use App\Models\paitent_meal_planning;
+use Carbon\Carbon;
+use Database\Seeders\PatientMealPlanningSeeder;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class FetchMealPlanningStats extends Command
 {
@@ -21,28 +26,15 @@ class FetchMealPlanningStats extends Command
      */
     protected $description = 'Fetch meal planning stats at regular intervals';
 
-
-    public function __construct()
-    {
-        parent::__construct();
-    }
     /**
      * Execute the console command.
      */
     public function handle()
     {
-        $startDate = now()->subYears(2)->format('Y-m-d');
-        $endDate = now()->format('Y-m-d');
-
-        $response = Http::get(route('api.patient-meal-planning.stats'), [
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-        ]);
-
-        if ($response->successful()) {
-            \Log::info('Meal planning stats fetched successfully', ['data' => $response->json()]);
-        } else {
-            \Log::error('Failed to fetch meal planning stats', ['status' => $response->status()]);
-        }
+        DB::enableQueryLog();
+        $dateS = new Carbon('2022-08-11');
+        $dateE = new Carbon('2023-08-24');
+        $result = paitent_meal_planning::whereBetween('created_at', [$dateS->format('Y-m-d'), $dateE->format('Y-m-d')])->get();
+        Log::info($result, DB::getQueryLog());
     }
 }
