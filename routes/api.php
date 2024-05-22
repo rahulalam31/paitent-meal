@@ -17,4 +17,4 @@ use App\Http\Controllers\PaitentMealPlanningController;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
-Route::get('patient-meal-planning/stats', [App\Http\Controllers\PaitentMealPlanningController::class, 'getMonthlyStats']);
+Route::get('patient-meal-planning/stats', [App\Http\Controllers\PaitentMealPlanningController::class, 'getMonthlyStats'])->name('api.patient-meal-planning.stats');
