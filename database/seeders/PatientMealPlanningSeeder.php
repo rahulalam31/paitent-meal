@@ -18,20 +18,19 @@ class PatientMealPlanningSeeder extends Seeder
         $now = now();
 
         for ($i = 0; $i < 1000; $i++) {
-            $plannedDate = $faker->unique()->dateTimeInInterval($startDate = '-2 years', $interval = '+ 1 days', $timezone = null);
 
             DB::table('paitent_meal_plannings')->insert([
-                'patient_id' => $faker->numberBetween(1, 100),
-                'planned_date' => $plannedDate,
+                'patient_id' => $faker->uuid(),
+                'planned_date' => $faker->unique()->dateTimeBetween($startDate = '-2 years', $endDate = 'now')->format("Y-m-d"),
                 'total_calories' => $faker->numberBetween(1000, 3000),
                 'total_fats' => $faker->numberBetween(10, 100),
                 'total_carbs' => $faker->numberBetween(100, 300),
                 'total_proteins' => $faker->numberBetween(50, 200),
                 'is_active' => $faker->boolean,
-                'created_by' => 1,
-                'created_at' => $now,
-                'updated_by' => null,
-                'updated_at' => $now,
+                'created_by' => $faker->uuid(),
+                'created_at' => $faker->dateTimeBetween($startDate = '-2 years', $endDate = 'now')->format("Y-m-d"),
+                'updated_by' => $faker->uuid(),
+                'updated_at' => $faker->dateTimeBetween($startDate = '-2 years', $endDate = 'now')->format("Y-m-d"),
             ]);
         }
     }

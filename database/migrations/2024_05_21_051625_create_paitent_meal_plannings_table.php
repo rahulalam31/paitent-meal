@@ -13,21 +13,17 @@ return new class extends Migration
     {
         Schema::create('paitent_meal_plannings', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('patient_id');
+            $table->uuid('patient_id')->unique();
             $table->date('planned_date');
-            $table->integer('total_calories');
-            $table->integer('total_fats');
-            $table->integer('total_carbs');
-            $table->integer('total_proteins');
-            $table->boolean('is_active')->default(true);
-            $table->unsignedBigInteger('created_by');
-            $table->timestamps();
-            $table->unsignedBigInteger('updated_by')->nullable();
-
-            // $table->unique(['patient_id', 'planned_date']);
-
-            // Define foreign keys if needed
-            // $table->foreign('patient_id')->references('id')->on('patients')->onDelete('cascade');
+            $table->string('total_calories');
+            $table->string('total_fats');
+            $table->string('total_carbs');
+            $table->string('total_proteins');
+            $table->boolean('is_active');
+            $table->string('created_by');
+            $table->dateTime('created_at', $precision = 0);
+            $table->string('updated_by');
+            $table->dateTime('updated_at', $precision = 0);
         });
     }
 
