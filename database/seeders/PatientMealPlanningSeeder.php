@@ -18,7 +18,7 @@ class PatientMealPlanningSeeder extends Seeder
         $now = now();
 
         for ($i = 0; $i < 1000; $i++) {
-            $plannedDate = $faker->dateTimeBetween('-2 years', 'now');
+            $plannedDate = $faker->unique()->dateTimeInInterval($startDate = '-2 years', $interval = '+ 1 days', $timezone = null);
 
             DB::table('paitent_meal_plannings')->insert([
                 'patient_id' => $faker->numberBetween(1, 100),

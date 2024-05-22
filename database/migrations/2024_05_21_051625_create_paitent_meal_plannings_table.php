@@ -24,10 +24,10 @@ return new class extends Migration
             $table->timestamps();
             $table->unsignedBigInteger('updated_by')->nullable();
 
-            $table->unique(['patient_id', 'planned_date']);
+            // $table->unique(['patient_id', 'planned_date']);
 
             // Define foreign keys if needed
-            $table->foreign('patient_id')->references('id')->on('patients')->onDelete('cascade');
+            // $table->foreign('patient_id')->references('id')->on('patients')->onDelete('cascade');
         });
     }
 
