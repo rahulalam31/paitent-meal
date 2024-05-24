@@ -12,8 +12,8 @@ class PaitentMealPlanningController extends Controller
     public function getMonthlyStats(Request $request)
     {
         // dd($request);
-        $startDate = Carbon::parse($request->input('start_date'))->format('d/m/y');
-        $endDate = Carbon::parse($request->input('end_date'))->format('d/m/y');
+        $startDate = Carbon::parse($request->input('start_date'))->format('y/m/d');
+        $endDate = Carbon::parse($request->input('end_date'))->format('y/m/d');
 
         $plans = paitent_meal_planning::whereBetween('planned_date', [$startDate, $endDate])
         ->orderBy('planned_date')
